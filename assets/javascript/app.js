@@ -103,40 +103,49 @@ var questions = [
     "This president is ranked the worst in US history"
 ]
 
-//Starting score is 0.
-var score = 0;
-var timer_display;
-var number_of_rounds = 5;
-const ROUND_TIME = 5;
+var score = 0; //Starting score is 0.
+var timer_display; //Used for setInterval.
+var number_of_rounds = 5; //Current round number.
+const NUMBER_OF_ROUNDS = 5; //Number of rounds in the trivia game.
+const ROUND_TIME = 30; //How long each round lasts.
+const END_ROUND_TIME = 3000; //The time in milliseconds between rounds.
 
-
+//Randomly selects a function. Button functionaliy also defined here.
 function generateQuestion() {
     var guess = Math.floor(Math.random() * (presidentList.length - 1)) + 1;
-    $(".question").html(questions[guess]);
+    $(".question").html('<p class="text-center">'+questions[guess]+"</p>");
     generateAnswer(guess);
 
     $("button").on("click", function () {
         clearInterval(timer_display);
         $("button").attr("disabled", "disabled");
+        $("#"+guess).addClass("btn-success");
         if (this.id == guess) {
             score++;
-            $(".display_bottom").text("correct!");
+            $(this).addClass("btn-success");
+            $(".display_bottom").html('<p class="text-center">Correct!</p>');
 
         }
         else {
+            $(this).addClass("btn-danger");
             score--;
-            $(".display_bottom").text("wrong!");
+            $(".display_bottom").html('<p class="text-center">Wrong!</p>');
 
         }
-        setTimeout(startRound, 3000);
+        setTimeout(startRound, END_ROUND_TIME);
     });
-
+    return guess; 
 };
 
+//Answer generation.
+//The correct answer always corresponds to the question.
+//For example, the answer to questions[5] is presidentList[5]
+//Along with the correct answer, we also generate 3 unique random numbers for the wrong choices.
 function generateAnswer(num) {
-    var wrong = [];
-    $(".answer").html("");
-    wrong.push(num);
+    var wrong = []; //Array to hold the answers.
+    $(".answer").html(""); //Clears the div so the buttons from the previous round is removed.
+    wrong.push(num); //Push the correct answer.
+    //Generate a random number. The loop adds numbers to the array only if it is unique.
     while (wrong.length != 4) {
         var temp = Math.floor(Math.random() * (presidentList.length - 1)) + 1;
         for (var i = 0; i < wrong.length; i++) {
@@ -148,40 +157,55 @@ function generateAnswer(num) {
         if (temp != 0)
             wrong.push(temp);
     }
+    //Randomly sort the answers.
     wrong.sort(function () { return 0.5 - Math.random() });
+    //Add the buttons to the answer div.
     wrong.forEach(function (president) {
-        var trivia_button = $("<button>");
+        var trivia_button = $('<button class="btn btn-primary btn-lg mx-auto">');
         trivia_button.attr("id", president);
         trivia_button.text(presidentList[president]);
         $(".answer").append(trivia_button);
     });
 };
 
+//This function starts all rounds, including the first round.
+//Also does endgame checks.
 function startRound() {
+    $(".display_intro").html("");
     if (number_of_rounds == 0) {
-        $(".display_top").text("Game over!");
-        $(".display_bottom").text("Your score: " + score);
+        
+        $(".display_top").html('<p class="text-center">Game over!</p>');
+        $(".question").html("");
+        $(".answer").html("");
+        $(".display_bottom").html('<p class="text-center">Your score: ' + score + '</p>');
     }
     else {
+        //set local timer to const ROUND_TIME defined above.
+        //Display the local timer counting down.
         var timer = ROUND_TIME;
-        $(".display_top").text("Time left: " + timer);
+        $(".display_top").html('<p class="text-center">Time left: '+ timer + "</p>");
         $(".display_bottom").text("");
-        generateQuestion();
+        var temp = generateQuestion();
         timer_display = setInterval(function () {
-            $(".display_top").text("Time left: " + timer--);
+            $(".display_top").html('<p class="text-center">Time left: '+ --timer + "</p>");
             if (timer < 0) {
+                $(".display_top").html('<p class="text-center">Time left: Time is up!</p>');
                 clearInterval(timer_display);
                 $(".display_bottom").text("No answer given!");
                 $("button").attr("disabled", "disabled");
-                setTimeout(startRound, 3000);
+                $("#"+temp).addClass("btn-success");
+                setTimeout(startRound, END_ROUND_TIME);
             }
         }, 1000);
     }
     number_of_rounds--;
 }
 
+//On page load, start with instructions of the game.
 $(document).ready(function () {
-    $(".display_top").text("Welcome to Presidential Trivia! Click the button to start.");
-    $(".display_top").append($('<button onclick="startRound()">Start game!</button>'));
+    $(".display_intro").append("Welcome to Presidential Trivia!<br>");
+    $(".display_intro").append("Each correct answer rewards 1 point. Each wrong answer deducts 1 point.<br>");
+    $(".display_intro").append("Each unanswered question is worth 0 points.<br><br>");
+    $(".display_intro").append($('<button class="btn btn-primary btn-lg" onclick="startRound()">Click me to start the game!</button>'));
 
 });
