@@ -105,34 +105,31 @@ var questions = [
 
 //Starting score is 0.
 var score = 0;
+var timer_display;
+var number_of_rounds = 5;
+const ROUND_TIME = 5;
 
-function randomNum() {
-    setInterval(function () {
-        var num = Math.floor(Math.random() * (presidentList.length - 1)) + 1;
-        $(".test").append(presidentList[num] + ": " + num + "<br>");
-    }, 10);
-};
 
 function generateQuestion() {
-    $(".display").html("");
     var guess = Math.floor(Math.random() * (presidentList.length - 1)) + 1;
     $(".question").html(questions[guess]);
     generateAnswer(guess);
 
     $("button").on("click", function () {
-        console.log("button clicked");
-        console.log(this);
+        clearInterval(timer_display);
+        $("button").attr("disabled", "disabled");
         if (this.id == guess) {
             score++;
-            alert("Correct!");
+            $(".display_bottom").text("correct!");
+
         }
         else {
             score--;
-            alert("WRONG");
-        }
-    });
+            $(".display_bottom").text("wrong!");
 
-    return guess;
+        }
+        setTimeout(startRound, 3000);
+    });
 
 };
 
@@ -156,36 +153,35 @@ function generateAnswer(num) {
         var trivia_button = $("<button>");
         trivia_button.attr("id", president);
         trivia_button.text(presidentList[president]);
-        console.log(trivia_button);
         $(".answer").append(trivia_button);
     });
 };
 
-function startGame() {
-    var answer = generateQuestion();
-    
-    setInterval(function () {
+function startRound() {
+    if (number_of_rounds == 0) {
+        $(".display_top").text("Game over!");
+        $(".display_bottom").text("Your score: " + score);
+    }
+    else {
+        var timer = ROUND_TIME;
+        $(".display_top").text("Time left: " + timer);
+        $(".display_bottom").text("");
         generateQuestion();
-        
-    }, 10000);
-
-};
-
-
+        timer_display = setInterval(function () {
+            $(".display_top").text("Time left: " + timer--);
+            if (timer < 0) {
+                clearInterval(timer_display);
+                $(".display_bottom").text("No answer given!");
+                $("button").attr("disabled", "disabled");
+                setTimeout(startRound, 3000);
+            }
+        }, 1000);
+    }
+    number_of_rounds--;
+}
 
 $(document).ready(function () {
-    $(".display").text("Welcome to Presidential Trivia! Click the button to start.");
-    $(".display").append($('<button onclick="startGame()">Start game!</button>'));
-    $("button").on("click", function () {
-        console.log("button clicked");
-        console.log(this);
-        if (this.id == answer) {
-            score++;
-            alert("Correct!");
-        }
-        else {
-            score--;
-            alert("WRONG");
-        }
-    });
+    $(".display_top").text("Welcome to Presidential Trivia! Click the button to start.");
+    $(".display_top").append($('<button onclick="startRound()">Start game!</button>'));
+
 });
